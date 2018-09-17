@@ -1,0 +1,82 @@
+<html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>
+        Test of BankID
+      </title>
+  </head>
+  <body>
+    <input type="number"><br>
+    <button>Ok, sign me</button><br>
+    <div></div><br>
+    <h3>List of completed signatures</h3>
+    <ul>
+      {% for key, person in signed_personal_numbers.iteritems() %}
+        <li>
+          <ul>
+            <li>{{ person.completionData.user.name }}</li>
+            <li>{{ person.completionData.user.personalNumber }}</li>
+            <li>{{ person.completionData.cert.notBefore }}</li>
+            <li>{{ person.completionData.device.ipAddress }}</li>
+            <li>{{ person.completionData.signature }}</li>
+          </ul>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <script type="text/javascript">
+
+      // Listen for the button click
+      document.querySelector('button')
+        .addEventListener('click', initiateSigning)
+
+
+      /**
+       * Function that sends the request to our API that will initiate the
+       * signizg
+       */
+      function initiateSigning() {
+        var xhttp           = new XMLHttpRequest(),
+            personal_number = document.querySelector('input').value,
+            url             = window.location.href
+                            + 'bankid/'
+                            + personal_number
+
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(this.responseText)
+
+            if (response.error) {
+              showStatus(response.error)
+            } else {
+              openBankID(JSON.parse(this.responseText).autoStartToken)
+            }
+
+          }
+        }
+
+        xhttp.open('GET', url, true);
+        xhttp.send();
+        // Show that the request has been sent to the user
+        showStatus('Sending your credentials to the server...')
+      }
+
+      /**
+       * Function for opening the BankID app on the device
+       */
+      function openBankID(autoStartToken) {
+        window.open('bankid:///?autostarttoken=' + autoStartToken +
+                    '&redirect=');
+        document.querySelector('div').innerHTML = 'Launching BankID...'
+      }
+
+      /**
+       * Show status messages for the user
+       */
+      function showStatus(message) {
+        document.querySelector('div') .innerHTML = message
+      }
+
+    </script>
+  </body>
+</html>
